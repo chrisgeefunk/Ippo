@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Part of Ippo. Copyright (c) 2026 chrisgeefunk. PolyForm Noncommercial License 1.0.0, see LICENSE.md.
+# Part of Ippo. Copyright (c) 2026 Christian Greiner. PolyForm Noncommercial License 1.0.0, see LICENSE.md.
 """Spacing service calculator. Reads maps/*/{TREE,status,log}/<kid>; writes spacing/state/<kid>.md.
 Usage: python3 spacing/compute.py <kid> [YYYY-MM-DD]   (date defaults to today)"""
 import re, sys, os, datetime as dt

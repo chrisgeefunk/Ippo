@@ -2,7 +2,7 @@
 
 DESCRIBE. Where feedback about Ippo goes.
 
-- Maker: Chris
-- Email: (not set yet)
+- Maker: Chris (Christian Greiner)
+- Email: novaspark82@gmail.com
 
-If the email is not set, give the parent the draft to copy and tell them to send it to whoever shared Ippo with them.
+Use this address for feedback about Ippo and for questions about a commercial licence.

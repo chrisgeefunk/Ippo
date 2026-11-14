@@ -1,6 +1,6 @@
 # Licence
 
-Copyright © 2026 chrisgeefunk. Some rights reserved.
+Copyright © 2026 Christian Greiner. Some rights reserved.
 
 **In short: Ippo is free for anyone who does not make money with it. If you want to use it commercially, you need a separate licence from the maker.**
 
@@ -14,17 +14,19 @@ Families, and anyone else using Ippo for a non-commercial purpose, may use, copy
 | Code: the scripts and the page template | `cockpit/build.py`, `cockpit/template.html`, `spacing/compute.py` | [PolyForm Noncommercial License 1.0.0](LICENSES/PolyForm-Noncommercial-1.0.0.txt) |
 
 What that means in practice:
-- **Credit.** If you share Ippo or something built on it, say that it is based on Ippo by chrisgeefunk, link to this repository and name the licence.
+- **Credit.** If you share Ippo or something built on it, say that it is based on Ippo by Christian Greiner, link to this repository and name the licence.
 - **Not for commercial use.** You may not sell it, put it in a paid product or service, or otherwise use it mainly to earn money.
 - **Share alike.** If you change the content and share your version, share it under the same licence.
 
 The two licence texts are the binding terms; this summary is not.
 
-Required Notice: Copyright © 2026 chrisgeefunk (https://github.com/chrisgeefunk/Ippo)
+Required Notice: Copyright © 2026 Christian Greiner (https://github.com/chrisgeefunk/Ippo)
 
 ## Commercial use
 
-Any commercial use needs a separate written licence from the maker, agreed before you start. That includes selling Ippo or a version of it, building it into a paid app, course or service, and using it to deliver paid teaching. Write to the address in `CONTACT.md`.
+Any commercial use needs a separate written licence from the maker, agreed before you start. That includes selling Ippo or a version of it, building it into a paid app, course or service, and using it to deliver paid teaching.
+
+**Schools and tutors:** please get in touch before you use Ippo in paid teaching. The terms depend on the size of what you do. A single tutor or a small school will usually get a licence for free; a business built on Ippo pays. Write to the address in `CONTACT.md`.
 
 ## Contributions
 

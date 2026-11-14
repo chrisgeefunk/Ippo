@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Part of Ippo. Copyright (c) 2026 chrisgeefunk. PolyForm Noncommercial License 1.0.0, see LICENSE.md.
+# Part of Ippo. Copyright (c) 2026 Christian Greiner. PolyForm Noncommercial License 1.0.0, see LICENSE.md.
 """Rebuild cockpit/<kid>-<map>.html from maps/<map>/{TREE,status,log}, spacing/state and the kid profile. Usage: python3 cockpit/build.py mia math"""
 import re,json,sys,os,datetime
 kid,mp=sys.argv[1],sys.argv[2]; root=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
