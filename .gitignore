@@ -1,0 +1,13 @@
+# Your family's data stays on your computer. These paths are never committed, so a fork or pull request cannot publish them.
+kids/*.md
+!kids/_template.md
+inbox/*
+!inbox/.gitkeep
+maps/*/log/*
+!maps/*/log/.gitkeep
+maps/*/status/*
+!maps/*/status/.gitkeep
+spacing/state/*
+!spacing/state/.gitkeep
+cockpit/*-*.html
+.DS_Store

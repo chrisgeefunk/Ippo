@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>__KID__ Lernkarte</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800;100,400;100,500;100,600&display=swap">
+<style>
+/* Lernkarte: light only. White ground, one blue, wide bold Archivo headlines, soft tinted cards.
+   Views: Übersicht (next steps + milestones) → Meilenstein (blocks and their pieces; 8 + 5 has the dot frame) · Baum (all skills by age and strand). */
+:root{color-scheme:light}[hidden]{display:none!important}
+
+/* Layout: app surface. Greeting → hero card with the one number → three tinted action cards → the map card (age scale × lanes) with a detail sheet.
+   White ground, one brand blue, luminous tints for semantics, extended bold display. */
+:root{
+  --bg:#ffffff; --bg2:#f5f6fa; --ink:#0f1222; --ink2:#4b5068; --ink3:#8d91a6; --line:#e6e8f0;
+  --blue:#2a4bff; --blue2:#e9edff; --mint:#15b57b; --mint2:#def7ec; --sun:#f5b400; --sun2:#fff3c4; --coral:#ff5a3c; --coral2:#ffe2da; --lav:#efe9ff;
+  --r:22px; --rs:14px; --display:"Archivo",system-ui,sans-serif; --body:"Archivo",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);font-variation-settings:"wdth" 100}
+.wrap{max-width:1240px;margin:0 auto;padding-block:22px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.hi{font:800 15px var(--display);font-variation-settings:"wdth" 125;letter-spacing:.01em}
+.kids{display:flex;gap:6px}
+.kid{font:600 13px var(--body);border:1.5px solid var(--line);background:var(--bg);color:var(--ink2);padding:7px 14px;border-radius:999px;cursor:pointer}
+.kid[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+h1{font:800 clamp(30px,4.4vw,46px)/1.02 var(--display);font-variation-settings:"wdth" 125;letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--ink2);font-size:16px;margin:0 0 22px;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.card{background:var(--bg2);border-radius:var(--r);padding:20px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;background:var(--blue2)}
+.ring{width:132px;height:132px}
+.ring circle{fill:none;stroke-width:11;stroke-linecap:round}
+.ring .bg{stroke:color-mix(in srgb,var(--blue) 18%,transparent)} .ring .fg{stroke:var(--blue);transform:rotate(-90deg);transform-origin:50% 50%}
+.ring text{font:800 30px var(--display);font-variation-settings:"wdth" 125;fill:var(--ink);text-anchor:middle}
+.ring .sm{font:600 11px var(--body);fill:var(--ink2)}
+.hero h2{font:800 24px/1.1 var(--display);font-variation-settings:"wdth" 125;margin:0 0 6px;text-wrap:balance}
+.hero p{margin:0;color:var(--ink2)}
+.hero p b{color:var(--ink)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+.tile{border-radius:var(--r);padding:16px;cursor:pointer;border:0;text-align:left;font:inherit;color:var(--ink);display:grid;gap:2px;min-height:118px;align-content:start;transition:transform .12s}
+.tile:hover{transform:translateY(-2px)} .tile:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.tile .k{font:600 12px var(--body);color:var(--ink2);letter-spacing:.02em}
+.tile .n{font:800 36px/1 var(--display);font-variation-settings:"wdth" 125;margin:4px 0 2px}
+.tile .d{font-size:13px;color:var(--ink2)}
+.tile.mint{background:var(--mint2)} .tile.sun{background:var(--sun2)} .tile.coral{background:var(--coral2)}
+.tile[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.mapcard{padding:0;overflow:hidden;position:relative}
+.maphead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px 10px;flex-wrap:wrap}
+.maphead h3{font:800 17px var(--display);font-variation-settings:"wdth" 125;margin:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 12px var(--body);border:1.5px solid var(--line);background:var(--bg);color:var(--ink2);padding:6px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+#stage{position:relative;height:620px;overflow:hidden;touch-action:none;cursor:grab;background:var(--bg);border-top:1px solid var(--line)}
+#stage.drag{cursor:grabbing}
+#stage svg{position:absolute;left:0;top:0;overflow:visible}
+.band{fill:var(--bg2)} .band.alt{fill:transparent}
+.bandlabel{font:700 11px var(--display);font-variation-settings:"wdth" 125;fill:var(--ink3);letter-spacing:.06em}
+.lane-h{font:700 12px var(--display);font-variation-settings:"wdth" 125;fill:var(--ink)}
+.lane-bar{fill:var(--line)} .lane-bar-fill{fill:var(--dot)}
+.edge{fill:none;stroke:var(--line);stroke-width:1.4} .edge.on{stroke:var(--dot);stroke-width:2;opacity:.7} .edge.x{stroke-dasharray:3 4}
+.agel{stroke:var(--ink);stroke-width:1.4;stroke-dasharray:5 5} .agel-t{font:700 11px var(--display);font-variation-settings:"wdth" 125;fill:var(--ink)}
+.n{cursor:pointer} .n circle.ring{fill:none;stroke:none} .n circle.base{fill:var(--bg);stroke:var(--line);stroke-width:2}
+.n.m circle.base{fill:var(--dot);stroke:var(--dot)} .n.mi circle.base{fill:var(--dot2);stroke:var(--dot);stroke-dasharray:3 3}
+.n.d circle.base{fill:var(--sun2);stroke:var(--sun)} .n.d path.half{fill:var(--sun)}
+.n.s circle.base{stroke:var(--ink2)} .n.s path.q{fill:var(--ink2)}
+.n.r circle.base{fill:var(--coral2);stroke:var(--coral)} .n.x circle.base{stroke:var(--coral);stroke-width:3}
+.n.unl circle.base{stroke:var(--ink3)} .n.stretch circle.base{stroke-dasharray:2 3}
+.n.gap circle.ring{stroke:var(--coral);stroke-width:2.2;fill:none}
+.n text{font:600 10px var(--body);fill:var(--ink2);text-anchor:middle;pointer-events:none} .n.m text{fill:#fff}
+.n.due circle.dot{fill:var(--coral)} .n.next circle.ring{stroke:var(--ink);stroke-width:1.6;fill:none;stroke-dasharray:2 3}
+.n.sel circle.base{stroke:var(--ink);stroke-width:3.5}
+.dim{opacity:.14} @media (prefers-reduced-motion:no-preference){.n,.edge{transition:opacity .18s}}
+.ctl{position:absolute;right:12px;bottom:12px;display:flex;gap:6px}
+.ctl button{width:36px;height:36px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:700 15px var(--body);cursor:pointer}
+.foot{position:absolute;left:14px;bottom:16px;font:500 11px var(--body);color:var(--ink3)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px 20px 16px;font-size:12px;color:var(--ink2);border-top:1px solid var(--line)}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:inline-block;flex:none}
+.sw.m{background:var(--dot);border-color:var(--dot)} .sw.mi{background:var(--dot2);border-color:var(--dot)} .sw.d{background:var(--sun2);border-color:var(--sun)} .sw.s{border-color:var(--ink2)} .sw.r{background:var(--coral2);border-color:var(--coral)} .sw.gap{border-color:var(--coral)} .sw.dot{background:var(--coral);border-color:var(--coral);width:9px;height:9px;margin:0 2px}
+/* side */
+.side{display:grid;gap:12px;position:sticky;top:12px}
+.sec{font:800 12px var(--display);font-variation-settings:"wdth" 125;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+.list{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.list li{display:grid;grid-template-columns:18px 1fr;gap:10px;align-items:start;padding:10px 12px;border-radius:var(--rs);cursor:pointer;background:var(--bg)}
+.list li:hover{box-shadow:inset 0 0 0 1.5px var(--line)} .list .nm{font-weight:600} .list .ds{display:block;color:var(--ink2);font-size:12.5px;line-height:1.4;margin-top:2px} .list .why{display:block;color:var(--ink3);font-size:12px;margin-top:3px}
+.ghost{color:var(--ink3);font-size:13px;margin:0}
+.meta{color:var(--ink3);font:600 11px var(--body);letter-spacing:.04em;text-transform:uppercase}
+h2.t{font:800 22px/1.15 var(--display);font-variation-settings:"wdth" 125;margin:4px 0 8px;text-wrap:balance}
+.desc{margin:0 0 12px;color:var(--ink)}
+.state{display:inline-flex;align-items:center;gap:8px;font-weight:600;background:var(--bg);border-radius:999px;padding:6px 12px 6px 8px;margin-bottom:14px;font-size:13px}
+.script{background:var(--bg);border-radius:var(--rs);padding:12px 14px;margin:0 0 14px;font-size:15px;line-height:1.4}
+.script small{display:block;color:var(--ink3);font-size:12px;margin-top:6px}
+dl{display:grid;grid-template-columns:88px 1fr;gap:8px 12px;margin:0 0 6px} dt{font:600 11px var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);padding-top:4px} dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.chain{display:flex;flex-wrap:wrap;gap:5px}
+.chain button{font:600 11px var(--body);border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:4px 8px;border-radius:999px;cursor:pointer}
+.chain button.m{border-color:var(--blue);color:var(--blue)} .chain button.d{border-color:var(--sun);color:var(--ink)}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.tl li{background:var(--bg);border-radius:var(--rs);padding:9px 12px;font-size:13px;border-left:4px solid var(--ink3)}
+.tl li.PASS{border-left-color:var(--blue)} .tl li.DEV{border-left-color:var(--sun)} .tl li.FAIL{border-left-color:var(--coral)}
+.tl .d{font:600 11px var(--body);color:var(--ink3);display:block} .tl .o{font:700 11px var(--body);margin-left:6px}
+.back{font:600 13px var(--body);border:0;background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;cursor:pointer;margin-top:12px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.side{position:static}.three{grid-template-columns:1fr 1fr 1fr}#stage{height:520px}}
+@media (max-width:520px){.three{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.ring{width:110px;height:110px}}
+
+/* ---- shell: tabs ---- */
+.top{align-items:center}
+.tabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:999px}
+.tab{font:600 13px var(--body);border:0;background:transparent;color:var(--ink2);padding:8px 16px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px rgba(15,18,34,.12)}
+.tab:focus-visible,.b-btn:focus-visible,.b-step:focus-visible,.b-brick button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.kid:disabled{opacity:.5;cursor:default}
+/* ---- Bausteine ---- */
+.b-stage{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:center;background:var(--blue2);padding:24px}
+.b-frame{width:100%;height:auto;display:block;background:var(--bg);border-radius:var(--rs)}
+.b-cell{fill:none;stroke:var(--line);stroke-width:1.5}
+.b-cell.need{stroke:var(--blue);stroke-width:2.5;stroke-dasharray:5 4}
+.b-dot{transition:transform .6s cubic-bezier(.3,.9,.3,1)}
+.b-dot.a{fill:var(--dot)} .b-dot.b{fill:var(--sun);stroke:#b98600;stroke-width:1.5}
+.b-lab{font:800 17px var(--display);font-variation-settings:"wdth" 125;fill:var(--ink);text-anchor:middle;transition:opacity .3s}
+.b-lab.off{opacity:0}
+.b-eq{font:800 clamp(40px,6vw,64px)/1 var(--display);font-variation-settings:"wdth" 125;letter-spacing:-.01em;display:flex;align-items:center;gap:.25em;flex-wrap:wrap;margin:0 0 10px}
+.b-eq .res{color:var(--blue);transition:opacity .3s} .b-eq .res.off{opacity:.18}
+.b-num{display:inline-grid;grid-template-columns:auto;justify-items:center;gap:2px}
+.b-num button{width:34px;height:22px;border:0;border-radius:8px;background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue);font:700 13px/1 var(--body);cursor:pointer}
+.b-num button:disabled{opacity:.3;cursor:default}
+.b-say{font-size:19px;line-height:1.35;margin:0 0 16px;min-height:2.7em;font-weight:500;text-wrap:balance}
+.b-steps{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.b-step{font:600 13px var(--body);border:1.5px solid color-mix(in srgb,var(--blue) 25%,transparent);background:transparent;color:var(--ink2);min-width:38px;height:38px;padding:0 12px;border-radius:999px;cursor:pointer}
+.b-step[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.b-btn{font:600 14px var(--body);border:0;background:var(--blue);color:#fff;height:38px;padding:0 18px;border-radius:999px;cursor:pointer;margin-left:6px}
+.b-h{font:800 12px var(--display);font-variation-settings:"wdth" 125;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:28px 0 4px}
+.b-sum{margin:0 0 12px;color:var(--ink2);max-width:70ch}
+.b-blocks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.b-block{background:var(--bg2);border-radius:var(--r);padding:16px;display:grid;gap:10px;align-content:start;border:2px solid transparent;cursor:pointer;transition:border-color .2s}
+.b-block.on{border-color:var(--ink)}
+.b-block .no{font:800 12px var(--display);font-variation-settings:"wdth" 125;color:var(--ink3);letter-spacing:.06em}
+.b-block h3{font:800 20px/1.12 var(--display);font-variation-settings:"wdth" 125;margin:0;text-wrap:balance}
+.b-block .ex{font:600 15px var(--body);color:var(--blue);margin:0}
+.b-brick{background:var(--bg);border-radius:var(--rs);padding:11px 13px;border-left:6px solid var(--line);display:grid;gap:3px}
+.b-brick.sure{border-left-color:var(--dot)} .b-brick.prac{border-left-color:var(--sun);background:color-mix(in srgb,var(--sun2) 55%,var(--bg))}
+.b-brick.open{border-left-color:var(--coral)} .b-brick.later{border-left-style:dashed}
+.b-brick .st{font:700 11px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2)}
+.b-brick.sure .st{color:var(--dot)} .b-brick.open .st{color:#c93a1f}
+.b-brick .nm{font-weight:600;line-height:1.3}
+.b-brick .mo{font-size:13px;color:var(--ink2);line-height:1.4}
+.b-brick button{justify-self:start;border:0;background:none;padding:0;margin-top:2px;font:600 12px var(--body);color:var(--ink3);text-decoration:underline;cursor:pointer}
+.b-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.b-today{background:var(--sun2)} .b-now{background:var(--bg2)}
+.b-two h3{font:800 20px/1.12 var(--display);font-variation-settings:"wdth" 125;margin:4px 0 8px;text-wrap:balance}
+.b-two p{margin:0 0 8px} .b-two .q{background:var(--bg);border-radius:var(--rs);padding:12px 14px;font-size:16px;margin:10px 0}
+.b-hops{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font:700 15px var(--body);margin:10px 0 4px}
+.b-hops span{min-width:32px;height:32px;border-radius:999px;display:grid;place-items:center;background:var(--bg);padding:0 8px}
+.b-hops span.s{background:var(--blue);color:#fff} .b-hops i{color:var(--ink3);font-style:normal}
+.b-hops span.t{background:var(--ink);color:var(--bg)}
+.b-cap{font-size:13px;color:var(--ink2)}
+.b-opens{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.b-open{border:1.5px dashed var(--line);border-radius:var(--r);padding:14px 16px}
+.b-open .big{font:800 22px/1.1 var(--display);font-variation-settings:"wdth" 125;margin:0 0 4px}
+.b-open p{margin:0;font-size:13px;color:var(--ink2);line-height:1.4}
+.b-note{color:var(--ink3);font-size:13px;margin:22px 0 0}
+@media (max-width:900px){.b-stage{grid-template-columns:1fr}.b-blocks{grid-template-columns:1fr}.b-opens{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.b-two{grid-template-columns:1fr}.b-opens{grid-template-columns:1fr}.b-stage{padding:16px}.tab{padding:8px 12px}}
+@media (prefers-reduced-motion:reduce){.b-dot,.b-lab,.b-eq .res,.b-block{transition:none}}
+
+
+.b-back{font:600 13px var(--body);border:1.5px solid var(--line);background:var(--bg);color:var(--ink2);padding:7px 14px;border-radius:999px;cursor:pointer;margin:0 0 14px}
+.h-today{background:var(--sun2);margin-bottom:8px}
+.h-today h3{font:800 24px/1.12 var(--display);font-variation-settings:"wdth" 125;margin:4px 0 8px;text-wrap:balance}
+.h-today .q{background:var(--bg);border-radius:var(--rs);padding:12px 14px;font-size:16px;margin:10px 0;max-width:70ch}
+.h-today p{margin:0 0 6px;max-width:75ch}
+.h-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.h-card{background:var(--bg2);border:1.5px solid transparent;border-radius:var(--r);padding:18px;display:grid;gap:8px;align-content:start;text-align:left;font:inherit;color:var(--ink);cursor:pointer;transition:transform .12s}
+.h-card:hover{transform:translateY(-2px)} .h-card:focus-visible,.b-back:focus-visible,.b-brick .go:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.h-card.next{background:var(--bg);border:1.5px dashed var(--line)}
+.h-card .expr{font:800 40px/1 var(--display);font-variation-settings:"wdth" 125;letter-spacing:-.01em}
+.h-card .tt{font-weight:600;line-height:1.3}
+.h-strip{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.h-sq,.h-k{width:18px;height:18px;border-radius:5px;border:2px solid var(--line);background:var(--bg);display:inline-block;flex:none}
+.h-sq.sure,.h-k.sure{background:var(--dot);border-color:var(--dot)} .h-sq.prac,.h-k.prac{background:var(--sun);border-color:var(--sun)}
+.h-sq.open,.h-k.open{border-color:var(--coral)} .h-sq.later,.h-k.later{border-style:dashed}
+.h-count{font-size:13px;color:var(--ink2);display:flex;gap:4px 12px;flex-wrap:wrap}
+.h-count span{display:inline-flex;align-items:center;gap:5px} .h-k{width:10px;height:10px;border-radius:3px}
+.b-brick .also{font-size:12.5px;color:var(--ink2)}
+.b-brick .go{justify-self:start;border:0;background:var(--ink);color:var(--bg);font:600 12px var(--body);padding:6px 12px;border-radius:999px;cursor:pointer;margin-top:4px;text-decoration:none}
+.b-block.flat{cursor:default}
+.b-open.link{cursor:pointer;background:none;text-align:left;font:inherit;color:var(--ink)}
+@media (max-width:900px){.h-grid{grid-template-columns:1fr}}
+
+.wrap{padding-top:max(22px,env(safe-area-inset-top,0px))}
+/* --dot = the colour that means "secure" (tree dots, lit links, squares, the first number in the dot frame). A kid profile can set its own. */
+:root{--dot:var(--blue);--dot2:var(--blue2)}
+.b-two.one{grid-template-columns:1fr}
+.h-card .expr.long{font-size:26px;line-height:40px}
+.placement .h-sq.open,.placement .h-k.open{border-color:var(--ink3)}
+.placement .b-brick.open{border-left-color:var(--ink3)} .placement .b-brick.open .st{color:var(--ink2)}
+.h-all{margin-top:22px}
+.h-all summary{cursor:pointer;font:600 14px var(--body);color:var(--ink2);padding:10px 0;width:fit-content}
+.h-all summary:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.h-more{list-style:none;margin:10px 0 8px;padding:0;display:grid;gap:6px;max-width:75ch}
+.h-more button{display:grid;gap:2px;width:100%;text-align:left;border:0;background:var(--bg);border-radius:var(--rs);padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.h-more .nm{font-weight:600} .h-more .why{font-size:12.5px;color:var(--ink2)}
+.h-link{border:0;background:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+.h-more button:focus-visible,.h-link:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+</style></head><body>
+<div class="wrap">
+  <div class="top"><div class="hi">Lernkarte · __KID__ · Mathe</div>
+    <div class="tabs" role="tablist" aria-label="Ansicht"><button class="tab" role="tab" id="t-uebersicht" aria-selected="true">Übersicht</button><button class="tab" role="tab" id="t-baum" aria-selected="false">Baum</button></div></div>
+<section id="v-uebersicht" role="tabpanel" aria-labelledby="t-uebersicht">
+  <h1>Woran <span class="kn">__KID__</span> gerade baut.</h1>
+  <p class="sub" id="h-sub"></p>
+  <div class="card h-today" id="h-today"></div>
+  <div id="h-ms">
+    <div class="b-h" id="h-nowh">Jetzt im Bau</div>
+    <div class="h-grid" id="h-now"></div>
+    <div class="b-h" id="h-nexth">Als Nächstes</div>
+    <div class="h-grid" id="h-next"></div>
+    <details class="h-all" id="h-all"><summary id="h-alls"></summary><div id="h-rest"></div></details>
+  </div>
+  <p class="b-note stand"></p>
+</section>
+<section id="v-ms" hidden>
+  <button class="b-back" onclick="LK.show('uebersicht',true)">‹ Übersicht</button>
+  <h1 id="ms-h"></h1>
+  <p class="sub" id="ms-sub"></p>
+  <div class="b-blocks" id="ms-blocks"></div>
+  <div class="b-h" id="ms-oh">Das wird damit möglich</div>
+  <div class="b-opens" id="ms-opens"></div>
+  <p class="b-note">Für diesen Meilenstein gibt es noch keine Zeichnung.</p>
+</section>
+<section id="v-bausteine" hidden>
+  <button class="b-back" onclick="LK.show('uebersicht',true)">‹ Übersicht</button>
+  <h1>Woraus 8 + 5 gebaut ist.</h1>
+  <p class="sub">Eine große Fähigkeit besteht aus kleineren. Hier siehst du, welche Bausteine Plus über die Zehn braucht und welche davon <span class="kn">__KID__</span> schon hat.</p>
+  <div class="card b-stage">
+    <svg class="b-frame" id="b-svg" viewBox="0 0 502 236" role="img" aria-label="Zwanzigerfeld mit Punkten"></svg>
+    <div>
+      <div class="b-eq" aria-live="polite">
+        <span class="b-num"><button id="b-a-up" aria-label="Erste Zahl größer">+</button><span id="b-a">8</span><button id="b-a-dn" aria-label="Erste Zahl kleiner">−</button></span>
+        <span>+</span>
+        <span class="b-num"><button id="b-b-up" aria-label="Zweite Zahl größer">+</button><span id="b-b">5</span><button id="b-b-dn" aria-label="Zweite Zahl kleiner">−</button></span>
+        <span class="res off" id="b-res">= 13</span>
+      </div>
+      <p class="b-say" id="b-say"></p>
+      <div class="b-steps" role="group" aria-label="Schritte">
+        <button class="b-step" data-s="0">Aufgabe</button><button class="b-step" data-s="1">1</button><button class="b-step" data-s="2">2</button><button class="b-step" data-s="3">3</button>
+        <button class="b-btn" id="b-next">Weiter</button>
+      </div>
+    </div>
+  </div>
+  <div class="b-h">Die Bausteine</div>
+  <p class="b-sum" id="b-sum"></p>
+  <div class="b-blocks" id="b-blocks"></div>
+  <div class="b-two" id="b-two">
+    <div class="card b-today" id="b-today"></div>
+    <div class="card b-now" id="b-now"></div>
+  </div>
+  <div class="b-h">Das wird damit möglich</div>
+  <div class="b-opens" id="b-opens"></div>
+  <p class="b-note stand"></p>
+</section>
+<section id="v-baum" role="tabpanel" aria-labelledby="t-baum" hidden>
+  <h1>Mathe, Stand heute.</h1>
+  <p class="sub" id="lede"></p>
+  <div class="grid">
+    <div>
+      <div class="card hero">
+        <svg class="ring" viewBox="0 0 132 132" aria-hidden="true"><circle class="bg" cx="66" cy="66" r="56"></circle><circle class="fg" id="ringfg" cx="66" cy="66" r="56"></circle><text x="66" y="68" id="ringn">0</text><text x="66" y="86" class="sm">von <tspan id="ringt">0</tspan></text></svg>
+        <div><h2 id="herot"></h2><p id="herop"></p></div>
+      </div>
+      <div class="three" role="group" aria-label="Ansicht">
+        <button class="tile sun" id="f-next" aria-pressed="false"><span class="k">Heute lernen</span><span class="n" id="n-next">0</span><span class="d">nächste Schritte</span></button>
+        <button class="tile coral" id="f-gap" aria-pressed="false"><span class="k">Lücken</span><span class="n" id="n-gap">0</span><span class="d" id="d-gap"></span></button>
+        <button class="tile mint" id="f-due" aria-pressed="false"><span class="k">Heute abrufen</span><span class="n" id="n-due">0</span><span class="d">gesichert, Wiederholung fällig</span></button>
+      </div>
+      <div class="card mapcard">
+        <div class="maphead"><h3>Die Karte</h3><div class="chips"><button class="chip" id="f-all" aria-pressed="true">Alles</button><button class="chip" id="zf">Einpassen</button></div></div>
+        <div id="stage"><svg id="svg" aria-label="Skill map"></svg><div class="foot">ziehen · scrollen = zoomen · zeigen = Kette · tippen = Details</div><div class="ctl"><button id="zi" aria-label="Vergrößern">+</button><button id="zo" aria-label="Verkleinern">−</button></div></div>
+        <div class="legend"><span><i class="sw m"></i>gesichert</span><span><i class="sw mi"></i>mitgesichert</span><span><i class="sw d"></i>im Aufbau</span><span><i class="sw s"></i>angefangen</span><span><i class="sw"></i>frei</span><span><i class="sw gap"></i>Lücke</span><span><i class="sw dot"></i>Abruf fällig</span><span><i class="sw" style="border-style:dashed"></i>Stretch</span><span>— — heute: Alter</span></div>
+      </div>
+    </div>
+    <div class="side"><div class="card" id="panel"></div></div>
+  </div>
+</section>
+</div>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const D=JSON.parse(document.getElementById('data').textContent), nodes=D.nodes, byId=Object.fromEntries(nodes.map(n=>[n.id,n])), SP=D.spacing||{};
+// kid, age and dates come from the data (build.py reads kids/<kid>.md and the map's settings.md)
+const KID=D.kid||{}, NAME=KID.name||'__KID__', ISO=/^\d{4}-\d\d-\d\d$/, TODAY=new Date();
+if(/^#[0-9a-f]{6}$/i.test(KID.color||'')){const rs=document.documentElement.style;rs.setProperty('--dot',KID.color);rs.setProperty('--dot2',`color-mix(in srgb,${KID.color} 14%,#fff)`)}
+const MON=['Jan','Feb','März','Apr','Mai','Juni','Juli','Aug','Sep','Okt','Nov','Dez'];
+const fmtD=(s,year)=>ISO.test(s)?`${+s.slice(8)}. ${MON[+s.slice(5,7)-1]}${year?' '+s.slice(0,4):''}`:s;
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const born=/^(\d{4})-(\d\d)$/.exec(KID.born||''), AGE_MONTHS=born?(TODAY.getFullYear()-born[1])*12+(TODAY.getMonth()+1-born[2]):Math.round((+KID.age||6)*12);
+const CHILD_AGE=AGE_MONTHS/12, AGE_Y=Math.floor(AGE_MONTHS/12), AGE_M=AGE_MONTHS%12;
+const STAND=Object.values(D.logs).flat().map(l=>l.date).filter(d=>ISO.test(d)).sort().pop()||D.built||iso(TODAY);
+// placement mode (CONTRACT §8.5 / §9): unchecked nodes are unknown, not gaps
+const PLACEMENT=ISO.test(KID.placementUntil||'')&&iso(TODAY)<=KID.placementUntil;
+const LANES=["CNT","CRD","SUB","CMP","NUM","PW","AS","PV","MUL","GEO","POS","PAT","MEA","TIM","MON","DAT"];
+const LN={CNT:"Zählen",CRD:"Anzahl",SUB:"Blitzblick",CMP:"Vergleichen",NUM:"Zahlen",PW:"Zerlegen",AS:"Plus & Minus",PV:"Stellenwert",MUL:"Gruppen",GEO:"Formen",POS:"Lage",PAT:"Muster",MEA:"Messen",TIM:"Zeit",MON:"Geld",DAT:"Daten"};
+const KIND={"Mastered":"m","Mastered (placed)":"m","Mastered (inferred)":"mi","Developing":"d","Started":"s","Needs refresh":"r","Regressed":"x"};
+const LAB={m:"Gesichert",mi:"Mitgesichert",d:"Im Aufbau",s:"Angefangen",r:"Auffrischen",x:"Zurückgefallen",unl:"Frei, noch nicht begonnen",l:"Noch nicht erreichbar"};
+const st=id=>D.status[id]?.status||"Not started", kind=id=>KIND[st(id)]||"", ok=id=>["m","mi","d","r"].includes(kind(id));
+const unlocked=n=>n.req.every(r=>!byId[r]||byId[r].track==="shadow"||ok(r));
+const isGap=n=>n.track==="core"&&+n.age<Math.floor(CHILD_AGE)&&!["m","mi"].includes(kind(n.id))&&n.req.every(r=>!byId[r]||["m","mi","d","r"].includes(kind(r)))&&(!PLACEMENT||!!D.status[n.id]);
+const unknown=PLACEMENT?nodes.filter(n=>n.track==="core"&&+n.age<Math.floor(CHILD_AGE)&&!D.status[n.id]).length:0;
+const isDue=n=>SP[n.id]&&["leech","overdue","due","soon"].includes(SP[n.id].urg)&&SP[n.id].covered==="–";
+const NUMS=["CNT","CRD","SUB","CMP","NUM","PW","AS","PV"], unlocks={}; nodes.forEach(n=>n.req.forEach(r=>unlocks[r]=(unlocks[r]||0)+1));
+const presumed=new Set();(function walk(ids){ids.forEach(r=>{if(byId[r]&&!presumed.has(r)){presumed.add(r);walk(byId[r].req)}})})(nodes.filter(n=>(D.status[n.id]?.flags||"").includes("stated")).flatMap(n=>n.req));
+const next3=nodes.filter(n=>n.track==="core"&&!presumed.has(n.id)&&!["m","mi"].includes(kind(n.id))&&unlocked(n)&&!(D.status[n.id]?.flags||"").includes("placement pending")&&+n.age<=7)
+ .sort((a,b)=>(kind(b.id)==="d")-(kind(a.id)==="d")||(a.age-b.age)||(NUMS.includes(b.strand)-NUMS.includes(a.strand))||((unlocks[b.id]||0)-(unlocks[a.id]||0))).slice(0,3);
+// layout
+const AGES=[3,4,5,6,7,8], LW=112, LEFT=70, TOP=64, ROW=66, BAND_PAD=26, MAXR=7;
+const depth={}; const dep=id=>{if(depth[id]!=null)return depth[id];const n=byId[id];depth[id]=n.req.length?1+Math.max(0,...n.req.filter(r=>byId[r]).map(dep)):0;return depth[id]}; nodes.forEach(n=>dep(n.id));
+const bandRows={}; AGES.forEach(a=>bandRows[a]=1); const slot={};
+LANES.forEach(l=>AGES.forEach(a=>{const list=nodes.filter(n=>n.strand===l&&+n.age===a).sort((x,y)=>depth[x.id]-depth[y.id]||x.id.localeCompare(y.id));const cols=Math.max(1,Math.ceil(list.length/MAXR)),rows=Math.ceil(list.length/cols);list.forEach((n,i)=>slot[n.id]={r:i%rows,c:Math.floor(i/rows),cols});bandRows[a]=Math.max(bandRows[a],rows)}));
+const bandTop={}; let y=TOP; AGES.forEach(a=>{bandTop[a]=y;y+=bandRows[a]*ROW+BAND_PAD}); const H=y+16, W=LEFT+LANES.length*LW+24;
+const pos={}; nodes.forEach(n=>{const s=slot[n.id],cw=LW/s.cols;pos[n.id]={x:LEFT+LANES.indexOf(n.strand)*LW+cw*s.c+cw/2,y:bandTop[+n.age]+BAND_PAD/2+s.r*ROW+ROW/2}});
+const svg=document.getElementById('svg'); svg.setAttribute('width',W); svg.setAttribute('height',H);
+const NS='http://www.w3.org/2000/svg', el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const g=el('g'); svg.appendChild(g);
+AGES.forEach((a,i)=>{const h=bandRows[a]*ROW+BAND_PAD; g.appendChild(el('rect',{class:'band'+(i%2?' alt':''),x:0,y:bandTop[a],width:W,height:h,rx:0}));const t=el('text',{class:'bandlabel',x:14,y:bandTop[a]+17});t.textContent=a>=7?'KLASSE '+(a-5)+' · STRETCH':a===6?'ALTER 6 · KLASSE 1':'ALTER '+a;g.appendChild(t)});
+const AB=Math.min(8,Math.max(3,Math.floor(CHILD_AGE))), ay=bandTop[AB]+Math.min(1,Math.max(0,CHILD_AGE-AB))*(bandRows[AB]*ROW+BAND_PAD);
+g.appendChild(el('line',{class:'agel',x1:0,y1:ay,x2:W,y2:ay})); const at=el('text',{class:'agel-t',x:W-10,y:ay-7,'text-anchor':'end'}); at.textContent=`HEUTE · ${AGE_Y} J ${AGE_M} M`; g.appendChild(at);
+LANES.forEach((l,i)=>{const x=LEFT+i*LW;const h=el('text',{class:'lane-h',x:x+LW/2,y:30,'text-anchor':'middle'});h.textContent=LN[l];g.appendChild(h);
+  const core=nodes.filter(n=>n.strand===l&&n.track==='core'),done=core.filter(n=>['m','mi'].includes(kind(n.id))).length;
+  g.appendChild(el('rect',{class:'lane-bar',x:x+22,y:40,width:LW-44,height:4,rx:2}));g.appendChild(el('rect',{class:'lane-bar-fill',x:x+22,y:40,width:(LW-44)*done/Math.max(1,core.length),height:4,rx:2}));});
+const edgeEls=[]; nodes.forEach(n=>n.req.forEach(r=>{if(!byId[r])return;const a=pos[r],b=pos[n.id],dy=Math.max(22,(b.y-a.y)/2);const p=el('path',{class:'edge'+(ok(r)&&ok(n.id)?' on':'')+(byId[r].strand!==n.strand?' x':''),d:`M${a.x},${a.y+15} C${a.x},${a.y+15+dy} ${b.x},${b.y-15-dy} ${b.x},${b.y-15}`});p.dataset.a=r;p.dataset.b=n.id;g.appendChild(p);edgeEls.push(p)}));
+const nEls={}; nodes.forEach(n=>{const k=kind(n.id)||(unlocked(n)?'unl':''),p=pos[n.id];
+  const grp=el('g',{class:'n '+k+' '+n.track+(isGap(n)?' gap':'')+(isDue(n)?' due':'')+(next3.includes(n)?' next':''),transform:`translate(${p.x},${p.y})`,tabindex:0,role:'button','aria-label':n.id+' '+n.name});
+  const tt=el('title');tt.textContent=n.name+(n.desc?' — '+n.desc:'');grp.appendChild(tt);
+  grp.appendChild(el('circle',{class:'ring',r:20}));grp.appendChild(el('circle',{class:'base',r:14}));
+  if(k==='d')grp.appendChild(el('path',{class:'half',d:'M0,-14 A14,14 0 0 1 0,14 Z'}));if(k==='s')grp.appendChild(el('path',{class:'q',d:'M0,-14 A14,14 0 0 1 14,0 L0,0 Z'}));
+  if(isDue(n))grp.appendChild(el('circle',{class:'dot',cx:11,cy:-11,r:4.5}));
+  const t=el('text',{y:4});t.textContent=n.id.split('-')[1];grp.appendChild(t);
+  grp.addEventListener('click',()=>select(n.id));grp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(n.id)}});
+  grp.addEventListener('pointerenter',()=>lightChain(n.id));grp.addEventListener('pointerleave',()=>applyFilter());g.appendChild(grp);nEls[n.id]=grp});
+const anc=id=>{const s=new Set();const w=i=>byId[i].req.forEach(r=>{if(byId[r]&&!s.has(r)){s.add(r);w(r)}});w(id);return s};
+const desc=id=>{const s=new Set();const w=i=>nodes.forEach(n=>{if(n.req.includes(i)&&!s.has(n.id)){s.add(n.id);w(n.id)}});w(id);return s};
+function lightChain(id){const keep=new Set([id,...anc(id),...desc(id)]);nodes.forEach(n=>nEls[n.id].classList.toggle('dim',!keep.has(n.id)));edgeEls.forEach(e=>e.classList.toggle('dim',!(keep.has(e.dataset.a)&&keep.has(e.dataset.b))))}
+let filter='all'; const F={all:()=>true,gap:isGap,due:isDue,next:n=>next3.includes(n)};
+function applyFilter(){nodes.forEach(n=>nEls[n.id].classList.toggle('dim',!F[filter](n)));edgeEls.forEach(e=>e.classList.toggle('dim',filter!=='all'&&!(F[filter](byId[e.dataset.a])||F[filter](byId[e.dataset.b]))));['all','gap','due','next'].forEach(k=>document.getElementById('f-'+k).setAttribute('aria-pressed',String(k===filter)))}
+['all','gap','due','next'].forEach(k=>document.getElementById('f-'+k).onclick=()=>{filter=filter===k&&k!=='all'?'all':k;applyFilter();home()});
+// summary
+const core=nodes.filter(n=>n.track==='core'),mastered=core.filter(n=>['m','mi'].includes(kind(n.id))).length,gaps=nodes.filter(isGap),due=nodes.filter(isDue),dev=nodes.filter(n=>kind(n.id)==='d').length;
+const pct=mastered/core.length; const C=2*Math.PI*56; const fg=document.getElementById('ringfg'); fg.setAttribute('stroke-dasharray',C); fg.setAttribute('stroke-dashoffset',C*(1-pct));
+document.getElementById('ringn').textContent=mastered; document.getElementById('ringt').textContent=core.length;
+document.getElementById('herot').textContent=`${Math.round(pct*100)} % der Kernfähigkeiten sind gesichert.`;
+document.getElementById('herop').innerHTML=`<b>${dev}</b> im Aufbau. Stand ${fmtD(STAND,true)}. Alle Einträge sind von dir beobachtet und selbst bestätigt.`;
+document.getElementById('lede').innerHTML=`${NAME} ist ${AGE_Y} Jahr${AGE_Y===1?'':'e'} und ${AGE_M} Monat${AGE_M===1?'':'e'} alt. Die gestrichelte Linie in der Karte ist heute.${PLACEMENT?` Einstufung läuft bis ${fmtD(KID.placementUntil,true)}: Ungeprüftes gilt als unbekannt, nicht als Lücke.`:''}`;
+document.getElementById('n-next').textContent=next3.length; document.getElementById('n-gap').textContent=gaps.length; document.getElementById('n-due').textContent=due.length;
+document.getElementById('d-gap').textContent=PLACEMENT?`mit Nachweis · ${unknown} noch unbekannt`:'offen unter dem Alter';
+// panel
+const panel=document.getElementById('panel'), sw=k=>`<i class="sw ${k==='unl'||k==='l'?'':k}"></i>`;
+const item=(n,why)=>`<li onclick="select('${n.id}')"><span>${sw(kind(n.id)||'unl')}</span><span><span class="nm">${n.name}</span><span class="ds">${n.desc||''}</span><span class="why">${LN[n.strand]} · ${why}</span></span></li>`;
+function home(){const v=filter;
+ if(v==='gap'){panel.innerHTML=`<div class="sec">Lücken unter dem Alter · ${gaps.length}</div>${gaps.length?`<ul class="list">${gaps.map(n=>item(n,`Alter ${n.age} · ${LAB[kind(n.id)||'unl']}`)).join('')}</ul>`:'<p class="ghost">Keine.</p>'}`;return}
+ if(v==='due'){panel.innerHTML=`<div class="sec">Heute abrufen · ${due.length}</div><ul class="list">${due.map(n=>item(n,`fällig ${SP[n.id].due} · alle ${SP[n.id].interval} Tage`)).join('')}</ul>`;return}
+ panel.innerHTML=`<div class="sec">Heute lernen</div><ul class="list">${next3.map(n=>item(n,`${LAB[kind(n.id)||'unl']} · Alter ${n.age}`)).join('')}</ul>
+ <div class="sec" style="margin-top:16px">Lücken · ${gaps.length}</div>${gaps.length?`<ul class="list">${gaps.slice(0,4).map(n=>item(n,`Alter ${n.age}`)).join('')}</ul>${gaps.length>4?`<p class="ghost" style="margin-top:6px">und ${gaps.length-4} weitere – Kachel „Lücken“</p>`:''}`:'<p class="ghost">Keine.</p>'}`;}
+let sel=null;
+function select(id){if(sel)nEls[sel].classList.remove('sel');sel=id;nEls[id].classList.add('sel');const n=byId[id],s=D.status[id],k=kind(id)||(unlocked(n)?'unl':'l'),L=(D.logs[id]||[]).slice().reverse(),sp=SP[id];
+ panel.innerHTML=`<div class="meta">${n.id} · ${LN[n.strand]} · Alter ${n.age}${n.track!=='core'?' · '+n.track:''}</div><h2 class="t">${n.name}</h2>${n.desc?`<p class="desc">${n.desc}</p>`:''}
+ <div class="state">${sw(k)}${LAB[k]}${s?.flags&&s.flags!=='–'?`<span class="meta" style="margin-left:4px">· ${s.flags}</span>`:''}</div>
+ <div class="script">${n.check||'—'}<small>Regel ${n.rule}${n.pool&&n.pool!=='–'?' · '+n.pool:''}</small></div>
+ <dl><dt>Braucht</dt><dd><div class="chain">${n.req.length?n.req.map(r=>byId[r]?`<button class="${kind(r)}" onclick="select('${r}')">${r}</button>`:r).join(''):'—'}</div></dd>
+ <dt>Öffnet</dt><dd><div class="chain">${nodes.filter(x=>x.req.includes(id)).map(x=>`<button class="${kind(x.id)}" onclick="select('${x.id}')">${x.id}</button>`).join('')||'—'}</div></dd>
+ ${sp?`<dt>Abruf</dt><dd>${sp.urg} · fällig ${sp.due} · alle ${sp.interval} Tage${sp.covered!=='–'?'<br><span class="ghost">wird mit abgerufen über '+sp.covered+'</span>':''}</dd>`:''}</dl>
+ <div class="sec" style="margin-top:14px">Nachweise</div>${L.length?`<ul class="tl">${L.map(l=>`<li class="${l.outcome}"><span class="d">${l.date} · ${l.kind}${l.help&&l.help!=='–'?' · Hilfe: '+l.help:''}</span>${l.items}<span class="o">${l.outcome}</span></li>`).join('')}</ul>`:'<p class="ghost">Noch kein Nachweis.</p>'}
+ <button class="back" onclick="home()">Zurück</button>`;panel.scrollTop=0;if(window.innerWidth<=900)panel.scrollIntoView({behavior:'smooth',block:'start'})}
+home();applyFilter();
+const stage=document.getElementById('stage');let tx=0,ty=0,sc=1;const apply=()=>g.setAttribute('transform',`translate(${tx},${ty}) scale(${sc})`);
+function fit(){const r=stage.getBoundingClientRect();sc=Math.max(.3,Math.min(r.width/W,r.height/H,1));tx=(r.width-W*sc)/2;ty=0;apply()}
+let drag=null;stage.addEventListener('pointerdown',e=>{if(e.target.closest('.n,.ctl'))return;drag={x:e.clientX-tx,y:e.clientY-ty};stage.classList.add('drag');stage.setPointerCapture(e.pointerId)});
+stage.addEventListener('pointermove',e=>{if(!drag)return;tx=e.clientX-drag.x;ty=e.clientY-drag.y;apply()});stage.addEventListener('pointerup',()=>{drag=null;stage.classList.remove('drag')});
+stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,ns=Math.min(2.2,Math.max(.3,sc*(e.deltaY<0?1.1:.9)));tx=mx-(mx-tx)*ns/sc;ty=my-(my-ty)*ns/sc;sc=ns;apply()},{passive:false});
+document.getElementById('zi').onclick=()=>{sc=Math.min(2.2,sc*1.2);apply()};document.getElementById('zo').onclick=()=>{sc=Math.max(.3,sc/1.2);apply()};document.getElementById('zf').onclick=fit;
+fit();window.addEventListener('resize',fit);
+</script>
+<script>
+/* ===== Übersicht + Meilensteine =====
+   Curated content for the math map lives in BR (short plain names) and MS (milestones and their blocks).
+   Everything else (state, last log entry, what to say, age, date) is read from the data. Unknown ids are dropped. */
+window.LK=(function(){
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// short plain-German names; any node without one falls back to TREE "Erklärung (DE)", then to the skill name
+const BR={
+ // counting
+ 'CNT-01':'Sagt die Zahlen bis fünf auf','CNT-02':'Sagt die Zahlen bis zehn auf','CNT-03':'Zählt mit den Fingern bis zehn','CNT-04':'Zählt bis zwanzig',
+ 'CNT-05':'Weiß, welche Zahl danach kommt','CNT-06':'Zählt von zehn rückwärts bis null','CNT-07':'Weiß, welche Zahl davor kommt','CNT-08':'Zählt über die Zehner bis 100',
+ 'CNT-09':'Zählt in Zehnerschritten bis 100','CNT-10':'Zählt in Zehnern ab jeder Zahl: 23, 33, 43','CNT-14':'Zählt mitten in der Reihe weiter','CNT-15':'Weiß, was nach 29, 39, 49 kommt',
+ 'CNT-16':'Zählt in Zweierschritten bis 20','CNT-17':'Zählt in Fünferschritten bis 100',
+ // counting objects
+ 'CRD-01':'Zählt bis zu drei Dinge, jedes genau einmal','CRD-03':'Zählt bis zu zehn verstreute Dinge','CRD-04':'Zählt eine Reihe bis zehn ab','CRD-05':'Weiß: auseinandergeschoben bleiben es gleich viele',
+ 'CRD-06':'Gibt genau 1, 2 oder 3, wenn man darum bittet','CRD-07':'Gibt genau bis zu fünf','CRD-08':'Gibt genau sieben aus einem großen Haufen','CRD-09':'Legt bis zu 20 Dinge genau ab',
+ 'CRD-10':'Zählt bis zu 20 Dinge richtig ab','CRD-12':'Weiß: egal wo man anfängt, es sind gleich viele',
+ // at a glance
+ 'SUB-01':'Sieht 1, 2 oder 3 auf einen Blick','SUB-02':'Sieht bis zu fünf auf einen Blick','SUB-03':'Zeigt und erkennt Fingerbilder bis zehn','SUB-04':'Erkennt Mengen im Fünferfeld sofort',
+ 'SUB-05':'Sieht im Zehnerfeld: fünf und noch welche','SUB-06':'Sieht zwei Würfel zusammen, ohne zu zählen',
+ // comparing
+ 'CMP-01':'Sieht, wo deutlich mehr sind','CMP-03':'Weiß, welche von zwei Zahlen bis 10 mehr ist','CMP-04':'Sagt eins mehr und eins weniger bis 10','CMP-06':'Vergleicht zweistellige Zahlen: 34 oder 43','CMP-12':'Sagt zehn mehr und zehn weniger',
+ // numerals
+ 'NUM-01':'Nennt die Ziffern 0 bis 5','NUM-02':'Nennt die Ziffern 0 bis 10','NUM-03':'Ordnet Ziffer und Menge einander zu','NUM-04':'Liest die Zahlen 11 bis 20','NUM-05':'Schreibt die Ziffern 0 bis 10',
+ 'NUM-08':'Schreibt Zahlen bis 100 nach Diktat','NUM-09':'Zeigt auf die richtige Ziffer von 0 bis 5','NUM-10':'Schreibt die Zahlen 11 bis 20','NUM-11':'Liest die Zehnerzahlen 10 bis 90','NUM-12':'Liest die Zahlen 21 bis 99',
+ 'NUM-13':'Liest dreistellige Zahlen wie 347','NUM-14':'Liest Zahlen mit einer Null in der Mitte: 405','NUM-17':'Schreibt Zahlen bis 1000','NUM-18':'Unterscheidet gerade und ungerade bis 20','NUM-19':'Kennt der erste bis der zehnte',
+ // splitting
+ 'PW-01':'Findet die Teile von drei und vier','PW-02':'Kennt alle Teile der Fünf','PW-03':'Sieht die 8 als fünf und drei','PW-04':'Findet mit Plättchen heraus, wie viel bis zur Zehn fehlt','PW-05':'Findet den versteckten Teil',
+ 'PW-06':'Kennt die Verdopplungen bis 5 + 5','PW-07':'Sieht die 14 als zehn und vier','PW-08':'Löst 3 + __ = 8','PW-09':'Kennt die Verdopplungen bis 10 + 10','PW-10':'Weiß sofort, wie viel bis zur Zehn fehlt',
+ 'PW-11':'Zerlegt Zahlen bis 10 auf alle Arten','PW-12':'Rechnet Fast-Doppelte: 4 + 5',
+ // plus and minus
+ 'AS-01':'Tut kleine Mengen zusammen, bis fünf','AS-02':'Nimmt weg mit Dingen, bis fünf','AS-03':'Rechnet dazu, auch wenn die Dinge verdeckt sind','AS-04':'Zählt von der ersten Zahl weiter',
+ 'AS-07':'Rechnet plus bis 10 mit Fingern oder Steinen','AS-08':'Rechnet minus bis 10 mit Steinen','AS-09':'Nutzt Zerlegungen: 10 − 4 ist 6, weil 6 + 4 = 10','AS-10':'Leitet 6 + 7 aus 6 + 6 ab',
+ 'AS-11':'Rechnet 8 + 5 über die Zehn','AS-12':'Weiß Plus und Minus bis 10 sofort','AS-13':'Löst Rechengeschichten bis 10','AS-15':'Weiß: 3 + 7 ist dasselbe wie 7 + 3','AS-16':'Fängt bei der größeren Zahl an',
+ 'AS-19':'Rechnet minus als Ergänzen: von 7 bis 9 sind 2','AS-20':'Weiß: alle weg heißt null','AS-21':'Sagt, wie viele mehr es sind','AS-22':'Findet den fehlenden Teil in einer Geschichte','AS-24':'Findet heraus, wie viele dazugekommen sind',
+ 'AS-25':'Rechnet mit ganzen Zehnern: 34 + 20','AS-26':'Rechnet 38 + 5 über den Zehner','AS-27':'Rechnet 13 + 4','AS-28':'Rechnet 17 − 4','AS-29':'Rechnet 14 − 6 über die Zehn','AS-34':'Rechnet 32 + 24','AS-35':'Rechnet 54 + 27 in Sprüngen',
+ // place value, groups
+ 'PV-01':'Bündelt zehn Einzelne zu einem Zehner','PV-02':'Sagt bei 46: vier Zehner, sechs Einer','PV-03':'Weiß, was die 3 in 34 und in 43 bedeutet','PV-04':'Weiß: zehn Zehner sind hundert','PV-05':'Kennt Hunderter, Zehner und Einer',
+ 'MUL-05':'Teilt eine Menge in zwei gleiche Hälften',
+ // shapes, position, patterns
+ 'GEO-01':'Findet die gleiche Form','GEO-02':'Nennt Kreis, Quadrat und Dreieck','GEO-03':'Erkennt Dreiecke und Rechtecke, auch gedreht','GEO-04':'Unterscheidet Quadrat und Rechteck','GEO-05':'Zählt Ecken und Seiten',
+ 'GEO-06':'Kennt Fünfeck und Sechseck','GEO-07':'Entscheidet: Vieleck oder nicht','GEO-08':'Sortiert Formen und nennt die Regel','GEO-09':'Nennt Würfel, Kugel, Zylinder und andere Körper','GEO-10':'Weiß, was rollt und was sich stapeln lässt',
+ 'GEO-11':'Legt Formen in einen Umriss','GEO-12':'Baut aus Formen eine neue Form',
+ 'POS-01':'Versteht in, auf, unter, neben','POS-02':'Versteht vor, hinter, zwischen, über','POS-03':'Kennt links und rechts am eigenen Körper','POS-04':'Findet das dritte von links','POS-05':'Folgt Wegbeschreibungen',
+ 'PAT-01':'Legt ein Muster nach','PAT-02':'Führt ein Muster weiter','PAT-03':'Führt schwierigere Muster weiter','PAT-04':'Findet den Fehler im Muster','PAT-05':'Sagt, was sich wiederholt','PAT-06':'Setzt Zahlenfolgen fort: 2, 4, 6','PAT-07':'Überträgt ein Muster in Klatschen und Stampfen',
+ // measuring, time, money, data
+ 'MEA-01':'Sagt, was länger ist','MEA-02':'Ordnet drei Dinge nach der Länge','MEA-04':'Misst mit Klötzen, ohne Lücken','MEA-13':'Misst mit Handspannen und Schritten',
+ 'TIM-01':'Bringt den Tagesablauf in die richtige Reihenfolge','TIM-02':'Sagt die Wochentage der Reihe nach','TIM-03':'Sagt die Monate der Reihe nach','TIM-04':'Liest den Kalender','TIM-05':'Liest die volle Stunde','TIM-06':'Liest halb','TIM-07':'Liest die Uhr auf fünf Minuten','TIM-08':'Versteht gestern, heute, morgen',
+ 'MON-01':'Erkennt die Euro-Münzen','MON-02':'Weiß: der Wert hängt nicht von der Größe ab','MON-03':'Zählt Cent bis 20','MON-04':'Zählt Euro bis 20','MON-06':'Bezahlt einen Betrag passend',
+ 'DAT-01':'Sortiert nach einem Merkmal, zum Beispiel Farbe','DAT-02':'Sortiert nach eigener Regel und nennt sie','DAT-03':'Liest ein Bilddiagramm','DAT-04':'Macht selbst ein Bilddiagramm','DAT-05':'Führt eine Strichliste'};
+// what to say: the TREE check, except where that cell is not a sentence
+const SAY={'PW-02':'Fünf Steine, zwei zeigen, den Rest verstecken: „Wie viele sind versteckt?“','NUM-12':'Zahlenkarten 21 bis 99 zeigen: „Wie heißt die Zahl?“','AS-07':'„Vier und drei, wie viele?“ Finger sind erlaubt.'};
+// Milestones, ages 3 to 7. id = the skill that completes it (its age is the milestone's age); it sits in the last block.
+// A piece that is itself the id of another milestone is shown as a link to that milestone.
+let MS=[
+ // ---- about age 3
+ {key:'gib-mir-drei',id:'CRD-06',expr:'Gib mir 3',tt:'Bis drei zählen und geben',blocks:[
+   {t:'Die Zahlwörter',ids:['CNT-01']},{t:'Ein Wort pro Ding',ids:['CRD-01']},{t:'Menge sehen und geben',ids:['SUB-01','CRD-06']}]},
+ {key:'ordnen',id:'DAT-01',expr:'mehr · länger',tt:'Sortieren, vergleichen, Gleiches finden',blocks:[
+   {t:'Gleiches finden',ids:['GEO-01']},{t:'Mehr und länger',ids:['CMP-01','MEA-01']},{t:'Sortieren',ids:['DAT-01']}]},
+ // ---- about age 4
+ {key:'muster-und-lage',id:'PAT-02',expr:'● ○ ● ○',tt:'Muster und Lage',blocks:[
+   {t:'Wo ist es?',ids:['POS-01','POS-02']},{t:'Muster',ids:['PAT-01','PAT-02']}]},
+ {key:'zahl-heisst-menge',id:'CRD-08',expr:'Gib mir 7',tt:'Eine Zahl heißt eine Menge',blocks:[
+   {t:'Bis zehn zählen',ids:['CNT-02','CNT-03']},{t:'Eine Reihe abzählen',ids:['CRD-04']},{t:'Genau so viele geben',ids:['CRD-06','CRD-07','CRD-08']}]},
+ {key:'fuenf-im-blick',id:'SUB-04',expr:'● ● ● ● ●',tt:'Fünf auf einen Blick',blocks:[
+   {t:'Bis drei',ids:['SUB-01']},{t:'Bis fünf',ids:['SUB-02']},{t:'Im Fünferfeld',ids:['SUB-04']}]},
+ {key:'ziffern-bis-zehn',id:'NUM-03',expr:'0 – 10',tt:'Die Ziffern kennen',blocks:[
+   {t:'Ziffern bis fünf',ids:['NUM-09','NUM-01']},{t:'Ziffern bis zehn',ids:['NUM-02']},{t:'Ziffer und Menge',ids:['NUM-03']}]},
+ {key:'erstes-plus',id:'AS-03',expr:'2 + 2',tt:'Erstes Plus und Minus mit Dingen',blocks:[
+   {t:'Fünf abzählen',ids:['CRD-07']},{t:'Dazu und weg',ids:['AS-01','AS-02']},{t:'Im Kopf behalten',ids:['AS-03']}]},
+ {key:'fuenf-zerlegen',id:'PW-02',expr:'5 = 2 + 3',tt:'Die Fünf zerlegen',blocks:[
+   {t:'Fünf sehen',ids:['SUB-04']},{t:'Teile von drei und vier',ids:['PW-01']},{t:'Teile der Fünf',ids:['PW-02']}]},
+ {key:'formen-kennen',id:'GEO-02',expr:'■ ▲ ●',tt:'Formen kennen',blocks:[
+   {t:'Gleiche finden',ids:['GEO-01']},{t:'Formen legen',ids:['GEO-11']},{t:'Formen benennen',ids:['GEO-02']}]},
+ // ---- about age 5
+ {key:'tage',id:'TIM-02',expr:'Mo Di Mi',tt:'Tage und Reihenfolge',blocks:[
+   {t:'Tagesablauf',ids:['TIM-01']},{t:'Gestern, heute, morgen',ids:['TIM-08']},{t:'Wochentage',ids:['TIM-02']}]},
+ {key:'bis-zwanzig-zaehlen',id:'CRD-10',expr:'20',tt:'Bis zwanzig zählen',blocks:[
+   {t:'Die Zahlenreihe',ids:['CNT-04','CNT-14']},{t:'Zehn sicher abzählen',ids:['CRD-08','CRD-03','CRD-05','CRD-12']},{t:'Zwanzig abzählen',ids:['CRD-09','CRD-10']}]},
+ {key:'eins-mehr',id:'CMP-04',expr:'6 → 7',tt:'Davor, danach, eins mehr',blocks:[
+   {t:'Danach und davor',ids:['CNT-05','CNT-07']},{t:'Rückwärts',ids:['CNT-06']},{t:'Eins mehr, eins weniger',ids:['CMP-03','CMP-04']}]},
+ {key:'fuenf-und-etwas',id:'SUB-05',expr:'8 = 5 + 3',tt:'Zahlen bis 10 als fünf und etwas',blocks:[
+   {t:'Die Fünf und die Finger',ids:['PW-02','SUB-03']},{t:'Zwei Würfel',ids:['PW-06','SUB-06']},{t:'Fünf und etwas',ids:['PW-03','SUB-05']}]},
+ {key:'plus-mit-dingen',id:'AS-13',expr:'4 + 3',tt:'Plus und Minus bis 10 mit Dingen',blocks:[
+   {t:'Der Anfang',ids:['AS-03']},{t:'Mit Material rechnen',ids:['AS-07','AS-08','AS-20']},{t:'Rechengeschichten',ids:['AS-13']}]},
+ {key:'bis-zehn-zerlegen',id:'PW-11',expr:'10 = 7 + 3',tt:'Zahlen bis 10 zerlegen',blocks:[
+   {t:'Fünf und etwas',ids:['PW-03']},{t:'Der versteckte Teil',ids:['PW-05']},{t:'Bis zur Zehn, auf alle Arten',ids:['PW-04','PW-11']}]},
+ {key:'bis-zwanzig-schreiben',id:'NUM-10',expr:'14',tt:'Zahlen bis 20 lesen und schreiben',blocks:[
+   {t:'Die Ziffern',ids:['NUM-03']},{t:'Elf bis zwanzig lesen',ids:['NUM-04']},{t:'Schreiben',ids:['NUM-05','NUM-10']}]},
+ {key:'formen-genau',id:'GEO-09',expr:'Würfel',tt:'Formen genau kennen',blocks:[
+   {t:'Die ersten Formen',ids:['GEO-02']},{t:'Genau hinsehen',ids:['GEO-03','GEO-04','GEO-08']},{t:'Bauen und Körper',ids:['GEO-12','GEO-09']}]},
+ {key:'muster-durchschauen',id:'PAT-05',expr:'A B B',tt:'Muster durchschauen',blocks:[
+   {t:'Einfache Muster',ids:['PAT-02']},{t:'Weiterführen',ids:['PAT-03','PAT-07']},{t:'Verstehen',ids:['PAT-04','PAT-05']}]},
+ {key:'messen',id:'MEA-13',expr:'wie lang?',tt:'Längen vergleichen und messen',blocks:[
+   {t:'Vergleichen',ids:['MEA-01','MEA-02']},{t:'Messen',ids:['MEA-04','MEA-13']}]},
+ // ---- about age 6
+ {key:'weiterzaehlen',id:'AS-16',expr:'2 + 7',tt:'Bei der großen Zahl weiterzählen',blocks:[
+   {t:'Plus mit Material',ids:['AS-07']},{t:'Mitten in der Reihe einsteigen',ids:['CNT-05','CNT-14']},{t:'Bei der großen Zahl anfangen',ids:['AS-04','AS-15','AS-16']}]},
+ {key:'plus-ueber-zehn',id:'AS-11',expr:'8 + 5',tt:'Plus über die Zehn',blocks:[
+   {t:'Bis zur Zehn auffüllen',ids:['PW-10','PW-04','PW-03']},{t:'Die zweite Zahl zerlegen',ids:['PW-02','PW-11']},{t:'Zehn und noch etwas',ids:['PW-07','NUM-04','AS-11']}]},
+ {key:'zehner-einer',id:'PV-02',expr:'46',tt:'Zehner und Einer sehen',blocks:[
+   {t:'Zehn als ein Bündel',ids:['CRD-10','PW-07','PV-01']},{t:'In Zehnern zählen',ids:['CNT-15','CNT-09']},{t:'Zehner und Einer benennen',ids:['NUM-12','PV-02']}]},
+ {key:'bis-zehn-sofort',id:'AS-12',expr:'10 − 4',tt:'Plus und Minus bis 10, sofort',blocks:[
+   {t:'Mit Material rechnen',ids:['AS-07','AS-08']},{t:'Zerlegungen nutzen',ids:['PW-05','AS-09']},{t:'Auswendig',ids:['PW-04','PW-10','AS-12']}]},
+ {key:'minus-ueber-zehn',id:'AS-29',expr:'14 − 6',tt:'Minus über die Zehn',blocks:[
+   {t:'Plus über die Zehn',ids:['AS-11']},{t:'Minus als Ergänzen',ids:['PW-08','AS-09','AS-19']},{t:'Über die Zehn zurück',ids:['AS-29']}]},
+ {key:'naechster-zehner',id:'AS-26',expr:'38 + 5',tt:'Plus über den nächsten Zehner',blocks:[
+   {t:'Plus über die Zehn',ids:['AS-11']},{t:'Zehner und Einer sehen',ids:['PV-02']},{t:'Über den Zehner',ids:['AS-26']}]},
+ {key:'bis-hundert',id:'NUM-08',expr:'100',tt:'Zahlen bis 100',blocks:[
+   {t:'Zählen',ids:['CNT-15','CNT-08','CNT-09']},{t:'Lesen',ids:['NUM-11','NUM-12']},{t:'Vergleichen und schreiben',ids:['CMP-06','NUM-08']}]},
+ {key:'in-schritten',id:'PAT-06',expr:'2, 4, 6',tt:'In Schritten zählen',blocks:[
+   {t:'Zweier',ids:['CNT-16','NUM-18']},{t:'Fünfer und Zehner',ids:['CNT-09','CNT-17']},{t:'Zahlenfolgen',ids:['PAT-06']}]},
+ {key:'rechengeschichten',id:'AS-24',expr:'5 + ? = 9',tt:'Rechengeschichten',blocks:[
+   {t:'Dazu und weg',ids:['AS-13']},{t:'Vergleichen und Teile',ids:['AS-21','AS-22']},{t:'Was fehlt?',ids:['PW-08','AS-24']}]},
+ {key:'ueber-der-zehn',id:'AS-28',expr:'13 + 4',tt:'Rechnen zwischen 10 und 20',blocks:[
+   {t:'Zehn und etwas',ids:['PW-07']},{t:'Bis zehn sofort',ids:['AS-12']},{t:'Im zweiten Zehner',ids:['AS-27','AS-28']}]},
+ {key:'doppelt-und-halb',id:'MUL-05',expr:'6 + 6',tt:'Verdoppeln und halbieren',blocks:[
+   {t:'Verdoppeln',ids:['PW-06','PW-09']},{t:'Fast-Doppelte',ids:['PW-12','AS-10']},{t:'Halbieren',ids:['MUL-05']}]},
+ {key:'mit-zehnern-rechnen',id:'AS-25',expr:'34 + 20',tt:'Mit Zehnern rechnen',blocks:[
+   {t:'Zehner und Einer',ids:['PV-02']},{t:'Die Stellen',ids:['PV-03','CNT-10']},{t:'Zehner dazu und weg',ids:['CMP-12','AS-25']}]},
+ {key:'kalender',id:'TIM-04',expr:'Kalender',tt:'Wochen, Monate, Kalender',blocks:[
+   {t:'Wochentage',ids:['TIM-02']},{t:'Monate',ids:['TIM-03']},{t:'Kalender lesen',ids:['TIM-04']}]},
+ {key:'formen-beschreiben',id:'GEO-07',expr:'Ecken',tt:'Formen beschreiben',blocks:[
+   {t:'Formen und Körper',ids:['GEO-09']},{t:'Ecken und Seiten',ids:['GEO-05','GEO-06']},{t:'Einordnen',ids:['GEO-10','GEO-07']}]},
+ {key:'links-rechts',id:'POS-04',expr:'links',tt:'Links, rechts, der Wievielte',blocks:[
+   {t:'Wege',ids:['POS-05']},{t:'Links und rechts',ids:['POS-03']},{t:'Der Wievielte',ids:['NUM-19','POS-04']}]},
+ {key:'daten',id:'DAT-04',expr:'||||',tt:'Zählen und zeigen',blocks:[
+   {t:'Sortieren',ids:['DAT-02']},{t:'Schaubild lesen',ids:['DAT-03']},{t:'Selbst machen',ids:['DAT-05','DAT-04']}]},
+ {key:'geld',id:'MON-06',expr:'2 €',tt:'Mit Geld umgehen',blocks:[
+   {t:'Münzen',ids:['MON-01','MON-02']},{t:'Zählen',ids:['MON-03','MON-04']},{t:'Bezahlen',ids:['MON-06']}]},
+ // ---- about age 7
+ {key:'zweistellig',id:'AS-35',expr:'54 + 27',tt:'Zweistellig rechnen',blocks:[
+   {t:'Mit Zehnern rechnen',ids:['AS-25']},{t:'Über den Zehner',ids:['AS-26']},{t:'Zwei Zahlen',ids:['AS-34','AS-35']}]},
+ {key:'uhr',id:'TIM-07',expr:'halb drei',tt:'Die Uhr lesen',blocks:[
+   {t:'Volle Stunde',ids:['TIM-05']},{t:'Halb',ids:['TIM-06']},{t:'Fünf Minuten',ids:['TIM-07']}]},
+ {key:'bis-tausend',id:'NUM-17',expr:'405',tt:'Zahlen bis 1000',blocks:[
+   {t:'Bis hundert',ids:['NUM-08']},{t:'Hunderter',ids:['PV-04','PV-05']},{t:'Lesen und schreiben',ids:['NUM-13','NUM-14','NUM-17']}]}];
+const own=M=>M.blocks.flatMap(B=>B.ids);
+MS=MS.filter(M=>[M.id,...own(M)].every(id=>byId[id]));
+const ms=k=>MS.find(M=>M.key===k), msOf=id=>MS.find(M=>M.id===id);
+// state in plain words. "open" = below the child's age and no evidence yet (unknown, not a gap claim)
+const STATE=id=>{const k=kind(id);if(k==='m'||k==='mi')return'sure';if(k)return'prac';return +byId[id].age<Math.floor(CHILD_AGE)?'open':'later'};
+const WORD={sure:'Sitzt sicher',prac:'In Arbeit',open:'Noch nicht angeschaut',later:'Kommt noch'};
+const name=id=>BR[id]||byId[id].desc||byId[id].name;
+const say=id=>SAY[id]||byId[id].check||'';
+const moment=id=>{const L=(D.logs[id]||[]).filter(l=>ISO.test(l.date)&&l.outcome!=='OPEN'&&l.kind!=='U'),l=L[L.length-1];if(!l)return'';
+  return `${fmtD(l.date)}: ${/^parent (attestation|statement)/.test(l.items)?(/statement/.test(l.items)?'von dir so angegeben, noch nicht geprüft.':'von dir bestätigt.'):esc(l.items)}`};
+// all pieces of a milestone, with nested milestones opened up
+const flat=(M,seen=new Set())=>{own(M).forEach(id=>{const N=msOf(id);if(N&&N!==M)flat(N,seen);else seen.add(id)});return seen};
+const nested=M=>own(M).some(id=>msOf(id)&&msOf(id)!==M);
+const holds=id=>MS.filter(M=>own(M).includes(id));  // milestones that list the piece themselves
+const holdsTxt=(H,long)=>H.slice(0,3).map(M=>long?`${M.expr} (${M.tt})`:M.expr).join(', ')+(H.length>3?` und ${H.length-3} weiteren`:'');
+const score=M=>{const f=[...flat(M)];return f.reduce((s,id)=>s+({sure:1,prac:.5}[STATE(id)]||0),0)/f.length};
+const isNext=id=>next3.some(n=>n.id===id);
+function brick(id,key){const N=msOf(id),link=N&&N.key!==key,f=link?[...flat(N)]:[],c=k=>f.filter(i=>STATE(i)===k).length,
+    s=link?(c('sure')===f.length?'sure':c('sure')+c('prac')?'prac':'later'):STATE(id),mo=link?'':moment(id),
+    others=MS.filter(M=>M.key!==key&&own(M).includes(id)&&M.id!==id);
+  return `<div class="b-brick ${s}"><span class="st">${link?`Meilenstein · ${c('sure')} sicher, ${c('prac')} in Arbeit, ${c('open')+c('later')} offen`:WORD[s]+(isNext(id)?' · als Nächstes dran':'')}</span><span class="nm">${esc(name(id))}</span>${mo?`<span class="mo">${mo}</span>`:''}${others.length?`<span class="also">Steckt auch in: ${others.map(M=>M.expr).join(', ')}</span>`:''}${link?`<button class="go" onclick="event.stopPropagation();LK.show('m-${N.key}',true)">Öffnen</button>`:`<button onclick="event.stopPropagation();showInTree('${id}')">Im Baum zeigen</button>`}</div>`}
+const opensOf=M=>MS.filter(N=>N!==M&&own(N).includes(M.id));
+function renderMs(M){document.getElementById('ms-h').textContent=`Woraus ${M.expr} gebaut ist.`;
+  const f=[...flat(M)],c=s=>f.filter(id=>STATE(id)===s).length;
+  document.getElementById('ms-sub').textContent=`${M.tt}. Dazu gehören ${f.length} kleinere Fähigkeiten. Sicher: ${c('sure')} · in Arbeit: ${c('prac')} · offen: ${c('open')+c('later')}.`;
+  document.getElementById('ms-blocks').innerHTML=M.blocks.map((B,i)=>`<div class="b-block flat"><span class="no">BAUSTEIN ${i+1}</span><h3>${B.t}</h3>${B.ids.map(id=>brick(id,M.key)).join('')}</div>`).join('');
+  const o=opensOf(M);document.getElementById('ms-oh').hidden=!o.length;
+  document.getElementById('ms-opens').innerHTML=o.map(N=>`<button class="b-open link" onclick="LK.show('m-${N.key}',true)"><p class="big">${N.expr}</p><p>${N.tt}</p></button>`).join('')}
+// ---------- routing: #uebersicht, #m-<key>, #baum ----------
+const VIEWS=['uebersicht','bausteine','ms','baum'];
+function show(nm,push){let view='uebersicht';const M=nm&&nm.startsWith('m-')?ms(nm.slice(2)):null;
+  if(nm==='baum')view='baum';else if(M){view=M.key==='plus-ueber-zehn'?'bausteine':'ms';if(view==='ms')renderMs(M)}else nm='uebersicht';
+  VIEWS.forEach(v=>document.getElementById('v-'+v).hidden=v!==view);
+  document.getElementById('t-uebersicht').setAttribute('aria-selected',String(view!=='baum'));document.getElementById('t-baum').setAttribute('aria-selected',String(view==='baum'));
+  if(view==='baum')requestAnimationFrame(fit);
+  if(push){if(location.hash!=='#'+nm){try{history.pushState(null,'','#'+nm)}catch(e){location.hash=nm}}window.scrollTo({top:0})}}
+document.getElementById('t-uebersicht').onclick=()=>show('uebersicht',true);document.getElementById('t-baum').onclick=()=>show('baum',true);
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));window.addEventListener('popstate',()=>show(location.hash.slice(1)));
+window.showInTree=id=>{show('baum',true);requestAnimationFrame(()=>select(id))};
+window.showDue=()=>{show('baum',true);requestAnimationFrame(()=>{if(filter!=='due')document.getElementById('f-due').click()})};
+// ---------- Übersicht ----------
+document.querySelectorAll('.kn').forEach(e=>e.textContent=NAME);
+document.body.classList.toggle('placement',PLACEMENT);  // during placement, unchecked pieces are unknown and drawn neutral, not as gaps
+// top card: the map's own "Next 3" (CONTRACT §9), first one large. The blocks only explain where it leads.
+(function(){const el=document.getElementById('h-today');
+  if(!next3.length){el.innerHTML=`<div class="sec">Als Nächstes lernen</div><p>Gerade ist kein nächster Schritt offen.</p>`;return}
+  const n=next3[0],H=holds(n.id),mo=moment(n.id),rest=next3.slice(1);
+  el.innerHTML=`<div class="sec">Als Nächstes lernen</div><h3>${esc(name(n.id))}</h3>${say(n.id)?`<div class="q">${esc(say(n.id))}</div>`:''}<p><b>${LAB[kind(n.id)||'unl']}.</b> ${mo}</p>${H.length?`<p class="b-cap">Steckt in: ${holdsTxt(H,true)}.</p>`:''}
+  ${rest.length?`<ul class="h-more">${rest.map(r=>`<li><button onclick="showInTree('${r.id}')"><span class="nm">${esc(name(r.id))}</span><span class="why">${LAB[kind(r.id)||'unl']}${holds(r.id).length?' · steckt in '+holdsTxt(holds(r.id)):''}</span></button></li>`).join('')}</ul>`:''}
+  <p class="b-cap">Auswahl und Reihenfolge: die „Next 3“ der Karte.${due.length?` Zum Abrufen fällig: ${due.length}. <button class="h-link" onclick="showDue()">Im Baum zeigen</button>`:''}</p>`})();
+MS.forEach(M=>M.age=+byId[M.id].age);
+// active = practice is happening on one of the milestone's own pieces (not only inside a milestone it contains)
+const active=M=>own(M).some(id=>!(msOf(id)&&msOf(id)!==M)&&STATE(id)==='prac');
+const card=(M,next)=>{const f=[...flat(M)],c=s=>f.filter(id=>STATE(id)===s).length,ord={sure:0,prac:1,open:2,later:3},full=c('sure')===f.length;
+  return `<button class="h-card${next?' next':''}" onclick="LK.show('m-${M.key}',true)"><span class="expr${M.expr.length>7?' long':''}">${M.expr}</span><span class="tt">${M.tt}</span><span class="h-strip">${f.map(STATE).sort((x,y)=>ord[x]-ord[y]).map(s=>`<i class="h-sq ${s}"></i>`).join('')}</span><span class="h-count">${full?'<span>geschafft</span>':`<span><i class="h-k sure"></i>${c('sure')} sicher</span><span><i class="h-k prac"></i>${c('prac')} in Arbeit</span><span><i class="h-k"></i>${c('open')+c('later')} offen</span>`}</span></button>`};
+// Only the milestones around the child's level are shown; the rest sits behind "Alle Meilensteine".
+// building = some pieces known, not all: active ones first, then the closest to done. fresh = nothing known yet: closest to the child's age first
+// (on an empty map: one year below, where the first assessment starts).
+const started=MS.some(M=>score(M)>0), done=MS.filter(M=>score(M)===1),
+  building=MS.filter(M=>score(M)>0&&score(M)<1).sort((x,y)=>active(y)-active(x)||score(y)-score(x)||x.age-y.age),
+  T=started?AGE_Y:Math.max(3,AGE_Y-1), fresh=MS.filter(M=>score(M)===0).sort((x,y)=>(x.age>T)-(y.age>T)||Math.abs(T-x.age)-Math.abs(T-y.age)),
+  now=building.slice(0,3), later=[...building.slice(3),...fresh].slice(0,3), rest=MS.filter(M=>!now.includes(M)&&!later.includes(M));
+document.getElementById('h-sub').textContent=started?'Die Meilensteine rund um den aktuellen Stand. Jedes Kästchen ist eine kleinere Fähigkeit, die dazugehört.':'Noch ist nichts eingetragen. Die Kästchen füllen sich nach der ersten Einschätzung.';
+document.getElementById('h-ms').hidden=!MS.length;
+document.getElementById('h-nowh').hidden=!now.length;document.getElementById('h-now').innerHTML=now.map(M=>card(M)).join('');
+document.getElementById('h-nexth').hidden=!later.length;document.getElementById('h-nexth').textContent=started?'Als Nächstes':'Hier geht es los';document.getElementById('h-next').innerHTML=later.map(M=>card(M,true)).join('');
+document.getElementById('h-all').hidden=!rest.length;
+document.getElementById('h-alls').textContent=`Alle ${MS.length} Meilensteine zeigen · ${done.length} geschafft`;
+document.getElementById('h-rest').innerHTML=[...new Set(rest.map(M=>M.age))].sort((a,b)=>a-b).map(a=>`<div class="b-h">${a>=7?'Ab 7 Jahren':'Um '+a+' Jahre'}</div><div class="h-grid">${rest.filter(M=>M.age===a).map(M=>card(M,true)).join('')}</div>`).join('');
+document.querySelectorAll('.stand').forEach(e=>e.textContent=`Stand ${fmtD(STAND,true)}. Alle Einträge sind von den Eltern beobachtet und selbst bestätigt (parent-observed, self-attested).`);
+return {MS,ms,brick,show,STATE,WORD,name,say,moment,esc};
+})();
+</script>
+<script>
+/* ===== Meilenstein 8 + 5: the twenty-frame ===== */
+(function(){
+const M=LK.ms('plus-ueber-zehn'); if(!M)return;
+const EX=[(a,b)=>`${a} braucht ${10-a}`,(a,b)=>`${b} ist ${10-a} und ${a+b-10}`,(a,b)=>`10 und ${a+b-10} ist ${a+b}`];
+const OPENS=[{big:'14 − 6',p:'Minus über die Zehn: erst bis zur 10, dann weiter.'},{big:'7 + 4 + 3',p:'Drei Zahlen: zuerst die Zehn vollmachen.'},{big:'38 + 5',p:'Dasselbe bei großen Zahlen: bis 40, dann 3 dazu.'},{big:'15 + 8 ?',p:'Schätzen: mehr oder weniger als 20?'}];
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('b-svg');
+const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e};
+const CX=i=>31+i*44+(i>=5?12:0)+22, CY=r=>18+r*44+22, WAITY=196;
+const cells=[];for(let r=0;r<2;r++)for(let i=0;i<10;i++)cells.push(mk('rect',{class:'b-cell',x:CX(i)-20,y:CY(r)-20,width:40,height:40,rx:10}));
+const labL=mk('text',{class:'b-lab off',y:WAITY-24}),labR=mk('text',{class:'b-lab off',y:WAITY-24});
+const dots=[];for(let i=0;i<18;i++)dots.push(mk('circle',{class:'b-dot',r:15,cx:0,cy:0}));
+let a=8,b=5,step=0;
+const put=(d,x,y)=>d.style.transform=`translate(${x}px,${y}px)`;
+function draw(){const fill=10-a,rest=a+b-10;
+  dots.forEach((d,i)=>{if(i<a){d.setAttribute('class','b-dot a');d.style.display='';put(d,CX(i),CY(0))}
+    else if(i<a+b){const j=i-a;d.setAttribute('class','b-dot b');d.style.display='';
+      if(step<2)put(d,CX(0)+j*38,WAITY);else if(step===2)put(d,CX(0)+j*38+(j>=fill?34:0),WAITY);
+      else j<fill?put(d,CX(a+j),CY(0)):put(d,CX(j-fill),CY(1))}
+    else d.style.display='none'});
+  cells.forEach((c,i)=>c.setAttribute('class','b-cell'+((step===1||step===2)&&i>=a&&i<10?' need':'')));
+  const split=step===2;labL.setAttribute('class','b-lab'+(split?'':' off'));labR.setAttribute('class','b-lab'+(split?'':' off'));
+  labL.textContent=fill;labR.textContent=rest;labL.setAttribute('x',CX(0)+(fill-1)*19);labR.setAttribute('x',CX(0)+fill*38+34+(rest-1)*19);
+  document.getElementById('b-a').textContent=a;document.getElementById('b-b').textContent=b;
+  const res=document.getElementById('b-res');res.textContent='= '+(a+b);res.classList.toggle('off',step<3);
+  document.getElementById('b-say').textContent=[`${a} blaue Punkte liegen im Feld, ${b} gelbe warten.`,`${a} braucht ${fill} bis zur Zehn.`,`Also wird aus der ${b}: ${fill} und ${rest}.`,`Zehn voll, ${rest} dazu: ${a+b}.`][step];
+  document.querySelectorAll('.b-step').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.s===step)));
+  document.getElementById('b-next').textContent=step===3?'Nochmal':'Weiter';
+  document.getElementById('b-a-up').disabled=a>=9;document.getElementById('b-a-dn').disabled=a<=6;
+  document.getElementById('b-b-up').disabled=b>=9;document.getElementById('b-b-dn').disabled=b<=11-a;
+  document.querySelectorAll('#b-blocks .b-block').forEach((x,i)=>{x.classList.toggle('on',i+1===step);x.querySelector('.ex').textContent=EX[i](a,b)});
+  hops()}
+const go=s=>{step=s;draw()};
+document.querySelectorAll('.b-step').forEach(x=>x.onclick=()=>go(+x.dataset.s));
+document.getElementById('b-next').onclick=()=>go(step===3?0:step+1);
+const setAB=(na,nb)=>{a=Math.min(9,Math.max(6,na));b=Math.min(9,Math.max(11-a,nb));step=0;draw()};
+document.getElementById('b-a-up').onclick=()=>setAB(a+1,b);document.getElementById('b-a-dn').onclick=()=>setAB(a-1,b);
+document.getElementById('b-b-up').onclick=()=>setAB(a,b+1);document.getElementById('b-b-dn').onclick=()=>setAB(a,b-1);
+// blocks, from the same milestone definition as the overview
+const all=M.blocks.flatMap(B=>B.ids),cnt=s=>all.filter(id=>LK.STATE(id)===s).length;
+document.getElementById('b-blocks').innerHTML=M.blocks.map((B,i)=>`<div class="b-block" data-i="${i}"><span class="no">BAUSTEIN ${i+1}</span><h3>${B.t}</h3><p class="ex"></p>${B.ids.map(id=>LK.brick(id,M.key)).join('')}</div>`).join('');
+document.querySelectorAll('#b-blocks .b-block').forEach(x=>x.onclick=()=>{go(+x.dataset.i+1);svg.scrollIntoView({behavior:'smooth',block:'nearest'})});
+document.getElementById('b-sum').textContent=`Die Bausteine bestehen zusammen aus ${all.length} kleineren Fähigkeiten. Sicher: ${cnt('sure')} · in Arbeit: ${cnt('prac')} · offen: ${cnt('open')+cnt('later')}. Tippe einen Baustein an, um ihn im Feld zu sehen.`;
+// furthest piece in this milestone, and how the child adds today (only if the log says she counts on)
+const far=all.find(id=>LK.STATE(id)==='prac'&&LK.say(id)), fb=far&&M.blocks.find(B=>B.ids.includes(far)), tEl=document.getElementById('b-today'), nEl=document.getElementById('b-now');
+if(far)tEl.innerHTML=`<div class="sec">Am weitesten in diesem Meilenstein</div><h3>${LK.esc(LK.name(far))}</h3><div class="q">${LK.esc(LK.say(far))}</div><p>${fb.t}. ${LK.moment(far)}</p>`;else tEl.hidden=true;
+const sNow=byId['AS-04']?LK.STATE('AS-04'):'';
+if(sNow==='prac'||sNow==='sure')nEl.innerHTML=`<div class="sec">So rechnet ${LK.esc(NAME)} heute</div><h3>Zählt weiter.</h3><div class="b-hops" id="b-hops"></div><p class="b-cap" id="b-hopcap"></p><p><b>${LK.WORD[sNow]}.</b> ${LK.moment('AS-04')}</p>`;else nEl.hidden=true;
+if(tEl.hidden||nEl.hidden)document.getElementById('b-two').classList.add('one');
+function hops(){const h=document.getElementById('b-hops');if(!h)return;let s=`<span class="s">${a}</span>`;for(let i=1;i<=b;i++)s+=`<i>›</i><span${i===b?' class="t"':''}>${a+i}</span>`;h.innerHTML=s;
+  document.getElementById('b-hopcap').textContent=`${b} einzelne Schritte. Mit den Bausteinen sind es zwei Sprünge: ${a} › 10 › ${a+b}.`}
+document.getElementById('b-opens').innerHTML=OPENS.map(o=>`<div class="b-open"><p class="big">${o.big}</p><p>${o.p}</p></div>`).join('');
+draw();
+})();
+LK.show(location.hash.slice(1));
+</script>
+</body></html>
