@@ -36,6 +36,10 @@ The first time, the assistant asks your child's name and birth month, draws an e
 - **Back up the folder** now and then.
 - Everything on the map is what a parent saw and reported. It is not a test result or a diagnosis.
 
+## Licence
+
+Ippo is free for anyone who does not make money with it. Commercial use needs a separate licence from the maker. Details are in `LICENSE.md`.
+
 ## Where things are
 
 `INDEX.md` lists every file. Short version: `kids/` = who they are · `maps/math/` = the skill tree, the rules, and each child's log and status · `cockpit/` = the visual map · `inbox/` = your voice notes.

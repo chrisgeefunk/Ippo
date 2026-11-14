@@ -44,6 +44,7 @@ When you hear it:
 |---|---|---|
 | `INDEX.md` | PATH | this file |
 | `README.md` | DESCRIBE | for the parent: what this is and how to use it day to day |
+| `LICENSE.md`, `LICENSES/` | DESCRIBE | the terms: free for non-commercial use, commercial use by separate licence |
 | `CONTACT.md` | DESCRIBE | where feedback about Ippo goes (see "When the parent is unhappy with Ippo") |
 | `kids/<kid>.md` | DESCRIBE | profile: age, languages, school, report language, active maps (copy `kids/_template.md`) |
 | `inbox/<date>-<n>.md` | LOG | verbatim transcript of each confirmed voice note (one note may cover several maps) |
