@@ -1,4 +1,6 @@
-# Math map
+# Ippo
+
+*Ippo (一歩) is Japanese for "one step".*
 
 A map of early maths, ages 3 to 7, kept as plain files that your AI assistant reads and writes. It answers one question: **where is my child right now, and what comes next?**
 
@@ -14,7 +16,7 @@ You teach and play. The assistant keeps the book: it tells you what to check tod
 
 1. Download this folder (green **Code** button → **Download ZIP**) and put it somewhere you keep, for example your Documents.
 2. Connect the folder to your assistant.
-3. Say: **"Read INDEX.md in the math map folder and follow it."**
+3. Say: **"Read INDEX.md in the Ippo folder and follow it."**
 
 The first time, the assistant asks your child's name and birth month, draws an empty map, and offers two ways to fill it: a short play session that finds out where your child is, or you simply tell it what your child can already do. After that it takes over.
 
@@ -30,6 +32,7 @@ The first time, the assistant asks your child's name and birth month, draws an e
 - **Language.** The check sentences in the tree and the map page are in German for now. The assistant gives you each check in your language.
 - **Your data stays with you.** Everything is in this folder on your computer. Nothing is sent anywhere, and the `.gitignore` keeps your child's files out of any fork you publish.
 - **There is a logbook.** `maps/math/log/<name>.md` records every check and every correction, and nothing in it is ever edited. If you are asked to share it to help improve the map, read it first; it is yours.
+- **Something not working for you?** Just say so to your assistant. It will offer to draft a short note to Chris, who makes Ippo and is glad to help and fix things. You read the note and send it yourself; the assistant never sends anything.
 - **Back up the folder** now and then.
 - Everything on the map is what a parent saw and reported. It is not a test result or a diagnosis.
 

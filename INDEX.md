@@ -1,4 +1,4 @@
-# INDEX.md — where everything is (PATH)
+# INDEX.md — where everything is in Ippo (PATH)
 
 Read this file first in every conversation. If `kids/` holds no profile yet (only `_template.md`), go to **First run** below. Otherwise load only what the request needs.
 
@@ -6,7 +6,7 @@ Read this file first in every conversation. If `kids/` holds no profile yet (onl
 
 Do this once per child, in the parent's language. Keep every message short; the parent is new here.
 
-1. **Say what this is, in two sentences,** and that everything stays in this folder on their computer. Then check that you can write a file in this folder and run `python3`. If either fails, say exactly what is missing and stop: without both, the record cannot be kept.
+1. **Say what Ippo is, in two sentences,** and that everything stays in this folder on their computer. Then check that you can write a file in this folder and run `python3`. If either fails, say exactly what is missing and stop: without both, the record cannot be kept.
 2. **Ask three things:** the child's first name or nickname, birth month and year, and the language they speak with the child. Nothing else.
 3. **Set up the files:**
    - `kids/<kid>.md` from `kids/_template.md` (file name lowercase, no spaces).
@@ -22,6 +22,17 @@ Do this once per child, in the parent's language. Keep every message short; the 
 
 Language: the check sentences in `TREE.md` are German. If the family uses another language, give each check in their language and keep the node ID and the item count unchanged. The cockpit page is German.
 
+## When the parent is unhappy with Ippo
+
+Listen for it in chat messages and voice notes: the parent complains about Ippo itself. For example a check that makes no sense, a rule that feels wrong or too strict, the map showing something they don't believe, too much effort, something confusing or broken. A hard day with the child is not a complaint about Ippo; don't react to that here.
+
+When you hear it:
+1. Finish what they asked first, or fix it yourself if it is something you got wrong.
+2. Then say, in their language and in one or two sentences, something like: *"It sounds like this part of Ippo isn't working for you. Chris, who makes Ippo, is glad to hear that and happy to help and fix it. Shall I draft a short email to him for you?"*
+3. If they say yes, write the draft and show it in full. It contains: what they were trying to do, what happened, what they expected, their own words where possible, the version lines of `maps/CONTRACT.md` and the map's `TREE.md`, and which assistant and model you are. Leave out the child's name and all log content unless the parent asks you to include it.
+4. The parent sends it, not you. Give the text ready to copy, plus a `mailto:` link to the address in `CONTACT.md` with subject and body filled in, so one click opens it in their mail program. Never send a message yourself, and never say it was sent.
+5. Offer once per complaint. If they decline, drop it and don't raise it again for the same issue.
+
 ## File types
 - **DESCRIBE** — says what something is or how it works. Only the parent decides changes.
 - **LOG** — append-only record. The assistant appends after the parent confirms; nothing is ever edited.
@@ -33,6 +44,7 @@ Language: the check sentences in `TREE.md` are German. If the family uses anothe
 |---|---|---|
 | `INDEX.md` | PATH | this file |
 | `README.md` | DESCRIBE | for the parent: what this is and how to use it day to day |
+| `CONTACT.md` | DESCRIBE | where feedback about Ippo goes (see "When the parent is unhappy with Ippo") |
 | `kids/<kid>.md` | DESCRIBE | profile: age, languages, school, report language, active maps (copy `kids/_template.md`) |
 | `inbox/<date>-<n>.md` | LOG | verbatim transcript of each confirmed voice note (one note may cover several maps) |
 | `maps/CONTRACT.md` | DESCRIBE | rules every map shares: statuses, mastery, log format, confirm loop, reports |
