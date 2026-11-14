@@ -20,7 +20,7 @@ What that means in practice:
 
 The two licence texts are the binding terms; this summary is not.
 
-Required Notice: Copyright © 2026 chrisgeefunk (https://github.com/chrisgeefunk/math-map)
+Required Notice: Copyright © 2026 chrisgeefunk (https://github.com/chrisgeefunk/Ippo)
 
 ## Commercial use
 
